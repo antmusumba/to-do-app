@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -51,6 +52,38 @@ func main() {
 			}
 			fmt.Printf("[%s] %d: %s\n", status, t.ID, t.Title)
 		}
+	case "done":
+		if len(os.Args) < 3 {
+			fmt.Println("Usage: gotasker done <task ID>")
+			return
+		}
+		id, err := strconv.Atoi(os.Args[2])
+		if err != nil {
+			fmt.Println("Invalid task ID:", os.Args[2])
+			return
+		}
+		if err := store.MarkDone(id); err != nil {
+			fmt.Println("Error:", err)
+		} else {
+			fmt.Println("✅ Task marked as done!")
+		}
+
+	case "remove":
+		if len(os.Args) < 3 {
+			fmt.Println("Usage: gotasker remove <task ID>")
+			return
+		}
+		id, err := strconv.Atoi(os.Args[2])
+		if err != nil {
+			fmt.Println("Invalid task ID:", os.Args[2])
+			return
+		}
+		if err := store.Remove(id); err != nil {
+			fmt.Println("Error:", err)
+		} else {
+			fmt.Println("🗑️ Task removed!")
+		}
+
 	default:
 		fmt.Println("Unknown command:", cmd)
 	}
