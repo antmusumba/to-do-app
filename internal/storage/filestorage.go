@@ -3,6 +3,7 @@ package storage
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"sync"
 
@@ -60,4 +61,48 @@ func (fs *FileStorage) Add(t task.Task) error {
 
 func (fs *FileStorage) List() ([]task.Task, error) {
 	return fs.readTasks()
+}
+
+func (fs *FileStorage) MarkDone(id int) error {
+	tasks, err := fs.readTasks()
+	if err != nil {
+		return err
+	}
+
+	for i, t := range tasks {
+		if t.ID == id {
+			tasks[i].Completed = true
+			return fs.writeTasks(tasks)
+		}
+	}
+
+	return fmt.Errorf("task with ID %d not found", id)
+}
+
+func (fs *FileStorage) Remove(id int) error {
+	tasks, err := fs.readTasks()
+	if err != nil {
+		return err
+	}
+
+	var newTasks []task.Task
+	found := false
+	for _, t := range tasks {
+		if t.ID != id {
+			newTasks = append(newTasks, t)
+		} else {
+			found = true
+		}
+	}
+
+	if !found {
+		return fmt.Errorf("task with ID %d not found", id)
+	}
+
+	// Reassign IDs to keep them consecutive
+	for i := range newTasks {
+		newTasks[i].ID = i + 1
+	}
+
+	return fs.writeTasks(newTasks)
 }
